@@ -7,6 +7,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [riotId, setRiotId] = useState(""); 
   const [region, setRegion] = useState("LAS");
   const [loading, setLoading] = useState(false);
@@ -109,14 +110,23 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
 
           <div>
             <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Contraseña</label>
-            <input 
-              type="password" 
-              required
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500"
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <input 
+                type={showPassword ? "text" : "password"} 
+                required
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 pr-12 text-white text-sm focus:outline-none focus:border-blue-500"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs font-medium focus:outline-none bg-slate-800/80 px-2 py-1 rounded"
+              >
+                {showPassword ? "Ocultar" : "Ver"}
+              </button>
+            </div>
           </div>
 
           {!isLogin && (
@@ -154,7 +164,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors shadow-lg disabled:opacity-50 mt-2"
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors shadow-lg disabled:opacity-50 mt-2 cursor-pointer"
           >
             {loading ? "Procesando..." : (isLogin ? "Entrar a mi cuenta" : "Validar y Registrarse")}
           </button>

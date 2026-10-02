@@ -5,26 +5,36 @@ export default function ChampionStats({ matches, patchVersion }) {
   const champMap = {};
 
   matches.forEach(m => {
-    const name = m.championName;
-    if (!champMap[name]) {
-      champMap[name] = { wins: 0, losses: 0, kills: 0, deaths: 0, assists: 0, games: 0 };
+    const rawName = m.championName || "Unknown";
+    // Normalizamos la clave para agrupar sin problemas de mayúsculas
+    const key = rawName.toLowerCase();
+
+    if (!champMap[key]) {
+      champMap[key] = { 
+        name: rawName, // Mantiene el nombre real para mostrar
+        wins: 0, 
+        losses: 0, 
+        kills: 0, 
+        deaths: 0, 
+        assists: 0, 
+        games: 0 
+      };
     }
-    champMap[name].games += 1;
-    if (m.win) champMap[name].wins += 1;
-    else champMap[name].losses += 1;
-    champMap[name].kills += m.kills;
-    champMap[name].deaths += m.deaths;
-    champMap[name].assists += m.assists;
+    champMap[key].games += 1;
+    if (m.win) champMap[key].wins += 1;
+    else champMap[key].losses += 1;
+    champMap[key].kills += m.kills;
+    champMap[key].deaths += m.deaths;
+    champMap[key].assists += m.assists;
   });
 
-  const sortedChampions = Object.keys(champMap).map(name => {
-    const stats = champMap[name];
+  const sortedChampions = Object.values(champMap).map(stats => {
     const winrate = Math.round((stats.wins / stats.games) * 100);
     const avgKills = (stats.kills / stats.games).toFixed(1);
     const avgDeaths = (stats.deaths / stats.games).toFixed(1);
     const avgAssists = (stats.assists / stats.games).toFixed(1);
     const kda = ((stats.kills + stats.assists) / Math.max(1, stats.deaths)).toFixed(2);
-    return { name, ...stats, winrate, avgKills, avgDeaths, avgAssists, kda };
+    return { ...stats, winrate, avgKills, avgDeaths, avgAssists, kda };
   }).sort((a, b) => b.games - a.games);
 
   return (
