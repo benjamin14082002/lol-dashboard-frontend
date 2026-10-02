@@ -7,6 +7,8 @@ import ChampionStats from '../components/ChampionStats';
 import PlayerTags from '../components/PlayerTags';
 import AuthModal from '../components/AuthModal';
 
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
 const RankedBadge = ({ title, data }) => {
   if (!data) return (
     <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 flex flex-col items-center justify-center h-full min-h-[100px]">
@@ -75,7 +77,7 @@ export default function Dashboard() {
       .then(versions => setPatchVersion(versions[0]))
       .catch(err => console.error("Error versión LoL:", err));
 
-    const apiUrl = `http://127.0.0.1:8000/api/profile/${region}/${encodeURIComponent(summonerName)}/`;
+    const apiUrl = `${API_URL}/api/profile/${region}/${encodeURIComponent(summonerName)}/`;
 
     fetch(apiUrl)
       .then(response => {
