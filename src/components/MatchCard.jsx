@@ -98,10 +98,15 @@ export default function MatchCard({ match, patchVersion, currentRegion }) {
           </div>
 
           <div className="ml-2">
-            <div className={`font-bold ${textColor} text-lg uppercase tracking-wide`}>
-              {isWin ? 'Victoria' : 'Derrota'}
+            <div className="flex items-center gap-2">
+              <span className={`font-bold ${textColor} text-lg uppercase tracking-wide`}>
+                {isWin ? 'Victoria' : 'Derrota'}
+              </span>
+              <span className="text-[11px] font-medium bg-slate-800/80 text-slate-300 px-2 py-0.5 rounded border border-slate-700">
+                {match.gameMode || 'Partida'}
+              </span>
             </div>
-            <div className="text-slate-400 text-xs">{match.duration}</div>
+            <div className="text-slate-400 text-xs mt-0.5">{match.duration}</div>
           </div>
         </div>
         
