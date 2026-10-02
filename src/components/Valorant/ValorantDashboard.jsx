@@ -9,12 +9,11 @@ export default function ValorantDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  // Estado para almacenar los retratos de agentes y fondos de mapas
   const [gameAssets, setGameAssets] = useState({ agents: {}, maps: {} });
+  const [expandedMatchId, setExpandedMatchId] = useState(null); // Controla qué partida está abierta
 
   const API_BASE_URL = 'https://lol-dashboard-backend.onrender.com';
 
-  // 1. Descargar recursos gráficos de Valorant al cargar la página
   useEffect(() => {
     const fetchAssets = async () => {
       try {
@@ -33,7 +32,6 @@ export default function ValorantDashboard() {
           mapsData[map.displayName.toLowerCase()] = map.listViewIcon || map.splash;
         });
 
-        // Mapeo de codenames internos comunes
         mapsData['summit'] = mapsData['ascent'] || mapsData['icebox']; 
         mapsData['corrode'] = mapsData['fracture'];
 
@@ -45,27 +43,37 @@ export default function ValorantDashboard() {
     fetchAssets();
   }, []);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
+  // Separamos la lógica de búsqueda para poder usarla al hacer clic en un jugador
+  const executeSearch = async (gameName, tagLine, searchRegion) => {
+    setLoading(true);
     setError('');
     setStats(null);
-
-    if (!searchQuery.includes('#')) {
-      setError('El formato debe ser Nombre#Tag (Ejemplo: Flex Homie 32#HOMIE)');
-      return;
-    }
-
-    const [gameName, tagLine] = searchQuery.split('#');
-    setLoading(true);
+    setExpandedMatchId(null);
 
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/valorant/search/${region}/${gameName}/${tagLine}/`);
+      const response = await axios.get(`${API_BASE_URL}/api/valorant/search/${searchRegion}/${gameName}/${tagLine}/`);
       setStats(response.data);
     } catch (err) {
       setError(err.response?.data?.error || 'No se encontró el jugador o la API está ocupada.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (!searchQuery.includes('#')) {
+      setError('El formato debe ser Nombre#Tag (Ejemplo: Flex Homie 32#HOMIE)');
+      return;
+    }
+    const [gameName, tagLine] = searchQuery.split('#');
+    executeSearch(gameName, tagLine, region);
+  };
+
+  const handlePlayerClick = (playerName, playerTag) => {
+    if(!playerName || !playerTag) return;
+    setSearchQuery(`${playerName}#${playerTag}`);
+    executeSearch(playerName, playerTag, region);
   };
 
   return (
@@ -75,44 +83,23 @@ export default function ValorantDashboard() {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/50 border border-slate-700 text-xs font-semibold text-red-400 tracking-wide uppercase">
             <span>⚡</span> Plataforma de Análisis Valorant
           </div>
-          
           <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white">
             Valorant Analytics <span className="text-red-500">Dashboard</span>
           </h1>
-          
           <p className="text-slate-400 text-sm sm:text-base max-w-xl mx-auto">
             Consulta estadísticas en tiempo real, agentes y rendimiento avanzado de cualquier jugador.
           </p>
 
           <form onSubmit={handleSearch} className="mt-8 relative max-w-2xl mx-auto">
             <div className="flex flex-col sm:flex-row items-center bg-slate-900 border border-slate-700 rounded-lg p-1.5 focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-500 transition-all shadow-xl">
-              <select 
-                value={region} 
-                onChange={(e) => setRegion(e.target.value)}
-                className="w-full sm:w-auto bg-transparent text-white px-4 py-3 sm:py-2 outline-none border-b sm:border-b-0 sm:border-r border-slate-700 text-sm font-semibold cursor-pointer"
-              >
+              <select value={region} onChange={(e) => setRegion(e.target.value)} className="w-full sm:w-auto bg-transparent text-white px-4 py-3 sm:py-2 outline-none border-b sm:border-b-0 sm:border-r border-slate-700 text-sm font-semibold cursor-pointer">
                 <option className="bg-slate-900 text-white" value="latam">LATAM</option>
                 <option className="bg-slate-900 text-white" value="na">NA</option>
                 <option className="bg-slate-900 text-white" value="eu">EU</option>
                 <option className="bg-slate-900 text-white" value="br">BR</option>
-                <option className="bg-slate-900 text-white" value="ap">AP</option>
-                <option className="bg-slate-900 text-white" value="kr">KR</option>
               </select>
-
-              <input 
-                type="text" 
-                placeholder="Nombre de Jugador#TAG" 
-                value={searchQuery} 
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-transparent text-white px-4 py-3 sm:py-2 outline-none text-sm placeholder-slate-500"
-                required
-              />
-
-              <button 
-                type="submit" 
-                disabled={loading}
-                className="w-full sm:w-auto mt-2 sm:mt-0 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-bold px-8 py-3 sm:py-2.5 rounded-md text-sm transition-colors cursor-pointer"
-              >
+              <input type="text" placeholder="Nombre de Jugador#TAG" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-transparent text-white px-4 py-3 sm:py-2 outline-none text-sm placeholder-slate-500" required />
+              <button type="submit" disabled={loading} className="w-full sm:w-auto mt-2 sm:mt-0 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-bold px-8 py-3 sm:py-2.5 rounded-md text-sm transition-colors cursor-pointer">
                 {loading ? 'Buscando...' : 'Buscar'}
               </button>
             </div>
@@ -121,76 +108,72 @@ export default function ValorantDashboard() {
         </div>
       ) : (
         <div className="w-full max-w-5xl mx-auto space-y-6">
-          <button 
-            onClick={() => setStats(null)} 
-            className="mb-2 text-slate-400 hover:text-white text-sm font-bold flex items-center gap-2 transition-colors"
-          >
-            ← Volver a buscar
-          </button>
+          
+          {/* NUEVA BARRA SUPERIOR DE BÚSQUEDA */}
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-900/60 p-3 rounded-xl border border-slate-800 shadow-md">
+            <button onClick={() => setStats(null)} className="text-slate-400 hover:text-white text-sm font-bold flex items-center gap-2 transition-colors">
+              ← Inicio
+            </button>
+            <form onSubmit={handleSearch} className="flex w-full sm:w-auto gap-2">
+              <select value={region} onChange={(e) => setRegion(e.target.value)} className="bg-slate-800 text-white px-3 py-2 rounded text-sm outline-none border border-slate-700 cursor-pointer">
+                <option value="latam">LATAM</option>
+                <option value="na">NA</option>
+                <option value="eu">EU</option>
+                <option value="br">BR</option>
+              </select>
+              <input type="text" placeholder="Jugador#TAG" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-slate-800 text-white px-3 py-2 rounded text-sm outline-none border border-slate-700 w-full sm:w-48 placeholder-slate-500" required />
+              <button type="submit" disabled={loading} className="bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white px-4 py-2 rounded text-sm font-bold transition-colors">
+                {loading ? '...' : 'Buscar'}
+              </button>
+            </form>
+          </div>
 
-          {/* ENCABEZADO COMPLETO DEL PERFIL */}
           <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-xl flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:justify-between shadow-lg relative overflow-hidden">
-            
             {stats.profile.cardImage && (
-              <div 
-                className="absolute inset-0 opacity-10 blur-xl pointer-events-none"
-                style={{ backgroundImage: `url(${stats.profile.cardImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
-              />
+              <div className="absolute inset-0 opacity-10 blur-xl pointer-events-none" style={{ backgroundImage: `url(${stats.profile.cardImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
             )}
-
             <div className="flex items-center gap-5 relative z-10">
               <div className="relative">
                 {stats.profile.cardImage ? (
                   <img src={stats.profile.cardImage} alt="Player Card" className="w-20 h-20 rounded-xl border-2 border-slate-700 shadow-md object-cover" />
                 ) : (
-                  <div className="w-20 h-20 bg-slate-800 rounded-xl border-2 border-slate-700 flex items-center justify-center">
-                     <span className="text-slate-500 text-xs">Sin Foto</span>
-                  </div>
+                  <div className="w-20 h-20 bg-slate-800 rounded-xl border-2 border-slate-700 flex items-center justify-center"><span className="text-slate-500 text-xs">Sin Foto</span></div>
                 )}
                 <div className="absolute -bottom-2.5 left-1/2 transform -translate-x-1/2 bg-slate-950 border border-slate-600 px-3 py-0.5 rounded-full text-[10px] font-bold text-white shadow-lg whitespace-nowrap">
                   LVL {stats.profile.level}
                 </div>
               </div>
-              
               <div className="text-center sm:text-left mt-2 sm:mt-0">
                 <div className="text-[11px] font-semibold text-red-400 uppercase tracking-wider mb-1">Agente Autorizado</div>
-                <h3 className="text-2xl sm:text-3xl font-bold text-white leading-none drop-shadow-md">
-                  {stats.profile.gameName}
-                </h3>
+                <h3 className="text-2xl sm:text-3xl font-bold text-white leading-none drop-shadow-md">{stats.profile.gameName}</h3>
                 <div className="text-slate-400 font-medium text-sm mt-1.5 flex items-center justify-center sm:justify-start gap-2">
                   <span>#{stats.profile.tagLine}</span>
                   <span className="text-slate-600">•</span> 
-                  <span className="bg-slate-800 text-red-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-slate-700">
-                    {stats.profile.region}
-                  </span>
+                  <span className="bg-slate-800 text-red-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-slate-700">{stats.profile.region}</span>
                 </div>
               </div>
             </div>
-
             <div className="flex items-center gap-4 bg-slate-800/40 px-5 py-3 rounded-xl border border-slate-700/50 mt-4 sm:mt-0 relative z-10 backdrop-blur-sm">
                {stats.profile.rankImage ? (
                  <img src={stats.profile.rankImage} alt="Rank" className="w-14 h-14 drop-shadow-lg" />
                ) : (
-                 <div className="w-14 h-14 bg-slate-700/50 rounded-full flex items-center justify-center border border-slate-600">
-                   <span className="text-slate-400 text-[10px] font-bold">N/A</span>
-                 </div>
+                 <div className="w-14 h-14 bg-slate-700/50 rounded-full flex items-center justify-center border border-slate-600"><span className="text-slate-400 text-[10px] font-bold">N/A</span></div>
                )}
                <div className="text-center sm:text-right">
                  <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wide">Rango Actual</div>
-                 <div className="text-white font-extrabold text-lg leading-tight mt-0.5">
-                   {stats.profile.rankName || 'Unranked'}
-                 </div>
+                 <div className="text-white font-extrabold text-lg leading-tight mt-0.5">{stats.profile.rankName || 'Unranked'}</div>
                </div>
             </div>
           </div>
 
-          {/* HISTORIAL DE PARTIDAS */}
           <div>
-            <h4 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-3">Últimas Partidas</h4>
-            <div className="space-y-3">
+            {error && <p className="text-red-400 text-sm mb-3 text-center">{error}</p>}
+            <h4 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-3">Últimas Partidas (Clic para detalles)</h4>
+            <div className="space-y-4">
               {stats.matches && stats.matches.length > 0 ? (
                 stats.matches.map((match, index) => {
                   const isWon = match.won;
+                  const isExpanded = expandedMatchId === match.matchId;
                   const borderColor = isWon ? 'border-emerald-500/50' : 'border-red-500/50';
                   const bgColor = isWon ? 'bg-emerald-900/40' : 'bg-red-900/40';
                   const textColor = isWon ? 'text-emerald-400' : 'text-red-400';
@@ -203,52 +186,93 @@ export default function ValorantDashboard() {
                   if (kdaRatio >= 3 || kdaRatio === 'Perfecto') kdaColor = 'text-yellow-400 font-bold';
                   else if (kdaRatio >= 2) kdaColor = 'text-emerald-400 font-bold';
 
-                  return (
-                    <div key={index} className={`relative overflow-hidden border ${borderColor} rounded-lg transition-all shadow-md group`}>
-                      
-                      {mapImg && (
-                        <div 
-                          className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity duration-300"
-                          style={{ backgroundImage: `url(${mapImg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
-                        />
-                      )}
-                      
-                      <div className={`absolute inset-0 ${bgColor} opacity-80`}></div>
+                  const redTeam = match.allPlayers?.filter(p => p.team === 'Red') || [];
+                  const blueTeam = match.allPlayers?.filter(p => p.team === 'Blue') || [];
 
-                      <div className="relative p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center gap-4 w-full sm:w-1/3">
-                          <div className="w-14 h-14 bg-slate-900 rounded-lg border border-slate-700 overflow-hidden shadow-lg flex-shrink-0">
-                            {agentImg ? (
-                              <img src={agentImg} alt={match.agentName} className="w-full h-full object-cover transform scale-110" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center font-bold text-xs text-red-400 uppercase">
-                                {match.agentName ? match.agentName.substring(0, 3) : 'VAL'}
+                  const renderPlayerRow = (player) => (
+                    <div 
+                      key={player.puuid} 
+                      onClick={(e) => { e.stopPropagation(); handlePlayerClick(player.name, player.tag); }}
+                      className="flex items-center justify-between p-2 hover:bg-slate-800/80 cursor-pointer rounded transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        {gameAssets.agents[player.agent?.toLowerCase()] ? (
+                          <img src={gameAssets.agents[player.agent?.toLowerCase()]} className="w-8 h-8 rounded border border-slate-700 bg-slate-900" alt={player.agent} />
+                        ) : (
+                          <div className="w-8 h-8 rounded border border-slate-700 bg-slate-900" />
+                        )}
+                        <div className="text-sm">
+                           <span className={`font-bold transition-colors ${player.name === stats.profile.gameName ? 'text-yellow-400' : 'text-slate-200 group-hover:text-white'}`}>{player.name}</span>
+                           <span className="text-slate-500 text-[10px] ml-1">#{player.tag}</span>
+                        </div>
+                      </div>
+                      <div className="text-xs font-mono text-slate-300">
+                        {player.kills} / {player.deaths} / {player.assists}
+                      </div>
+                    </div>
+                  );
+
+                  return (
+                    <div key={index} className="flex flex-col">
+                      {/* TARJETA PRINCIPAL (Clickeable) */}
+                      <div 
+                        onClick={() => setExpandedMatchId(isExpanded ? null : match.matchId)} 
+                        className={`relative overflow-hidden border ${borderColor} ${isExpanded ? 'rounded-t-lg border-b-0' : 'rounded-lg'} cursor-pointer transition-all shadow-md group`}
+                      >
+                        {mapImg && (
+                          <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity duration-300" style={{ backgroundImage: `url(${mapImg})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                        )}
+                        <div className={`absolute inset-0 ${bgColor} opacity-80`}></div>
+
+                        <div className="relative p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                          <div className="flex items-center gap-4 w-full sm:w-1/3">
+                            <div className="w-14 h-14 bg-slate-900 rounded-lg border border-slate-700 overflow-hidden shadow-lg flex-shrink-0">
+                              {agentImg ? (
+                                <img src={agentImg} alt={match.agentName} className="w-full h-full object-cover transform scale-110" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center font-bold text-xs text-red-400 uppercase">{match.agentName ? match.agentName.substring(0, 3) : 'VAL'}</div>
+                              )}
+                            </div>
+                            <div>
+                              <div className="font-bold text-white text-lg drop-shadow-md">{match.agentName || 'Desconocido'}</div>
+                              <div className="text-xs text-slate-300 mt-0.5 drop-shadow">
+                                Mapa: <span className="font-semibold text-white">{match.mapName}</span> • {match.gameMode}
                               </div>
-                            )}
+                            </div>
                           </div>
-                          <div>
-                            <div className="font-bold text-white text-lg drop-shadow-md">{match.agentName || 'Desconocido'}</div>
-                            <div className="text-xs text-slate-300 mt-0.5 drop-shadow">
-                              Mapa: <span className="font-semibold text-white">{match.mapName}</span> • {match.gameMode}
+                          <div className="flex justify-center w-full sm:w-1/3">
+                            <div className={`font-extrabold uppercase tracking-widest text-xl drop-shadow-md ${textColor}`}>
+                              {isWon ? 'VICTORIA' : 'DERROTA'}
+                            </div>
+                          </div>
+                          <div className="text-center sm:text-right w-full sm:w-1/3">
+                            <div className="font-bold text-white text-lg tracking-wide drop-shadow-md">
+                              {match.kills} <span className="text-slate-500 font-normal">/</span> <span className="text-red-400">{match.deaths}</span> <span className="text-slate-500 font-normal">/</span> {match.assists}
+                            </div>
+                            <div className="text-xs text-slate-300 drop-shadow mt-1">
+                              KDA Ratio: <span className={`${kdaColor} ml-1`}>{kdaRatio}</span>
                             </div>
                           </div>
                         </div>
-
-                        <div className="flex justify-center w-full sm:w-1/3">
-                          <div className={`font-extrabold uppercase tracking-widest text-xl drop-shadow-md ${textColor}`}>
-                            {isWon ? 'VICTORIA' : 'DERROTA'}
-                          </div>
-                        </div>
-
-                        <div className="text-center sm:text-right w-full sm:w-1/3">
-                          <div className="font-bold text-white text-lg tracking-wide drop-shadow-md">
-                            {match.kills} <span className="text-slate-500 font-normal">/</span> <span className="text-red-400">{match.deaths}</span> <span className="text-slate-500 font-normal">/</span> {match.assists}
-                          </div>
-                          <div className="text-xs text-slate-300 drop-shadow mt-1">
-                            KDA Ratio: <span className={`${kdaColor} ml-1`}>{kdaRatio}</span>
-                          </div>
-                        </div>
                       </div>
+
+                      {/* DESGLOSE DE JUGADORES (Se muestra si está expandido) */}
+                      {isExpanded && (
+                        <div className={`bg-slate-900 border ${borderColor} border-t-0 rounded-b-lg p-4 grid grid-cols-1 sm:grid-cols-2 gap-6 shadow-inner`}>
+                           <div>
+                             <h5 className="text-xs font-bold text-blue-400 mb-2 uppercase tracking-wider border-b border-slate-800 pb-1">Equipo Azul</h5>
+                             <div className="space-y-1">
+                               {blueTeam.map(p => renderPlayerRow(p))}
+                             </div>
+                           </div>
+                           <div>
+                             <h5 className="text-xs font-bold text-red-400 mb-2 uppercase tracking-wider border-b border-slate-800 pb-1">Equipo Rojo</h5>
+                             <div className="space-y-1">
+                               {redTeam.map(p => renderPlayerRow(p))}
+                             </div>
+                           </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })
