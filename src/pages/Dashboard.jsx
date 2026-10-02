@@ -35,7 +35,6 @@ const RankedBadge = ({ title, data }) => {
           {data.tier.toLowerCase()} {data.rank}
         </div>
         
-        {/* BARRA DE PROGRESO DE LP */}
         <div className="mt-1.5 w-full bg-slate-900 h-1.5 rounded-full overflow-hidden border border-slate-700">
            <div className="bg-blue-500 h-full transition-all duration-1000" style={{ width: `${data.lp}%` }}></div>
         </div>
@@ -78,7 +77,6 @@ export default function Dashboard() {
   useEffect(() => {
     setLoading(true);
     
-    // Descargamos la versión y el diccionario para mapear IDs a Nombres Reales
     fetch("https://ddragon.leagueoflegends.com/api/versions.json")
       .then(res => res.json())
       .then(versions => {
@@ -138,7 +136,6 @@ export default function Dashboard() {
   if (loading) return <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center"><div className="text-xl animate-pulse text-blue-400">Cargando perfil del invocador...</div></div>;
   if (error) return <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center flex-col gap-4"><div className="text-red-400 text-xl font-bold text-center max-w-lg">{error}</div><Link to="/" className="text-blue-400 hover:text-blue-300 mt-4 bg-slate-900 border border-slate-800 px-6 py-2 rounded-xl">Intentar con otro nombre</Link></div>;
 
-  // --- CÁLCULOS TRUE MAIN & TRUE WINRATE ---
   let mostPlayedChamp = "Unknown";
   if (playerData.matches && playerData.matches.length > 0) {
     const champCounts = {};
@@ -223,13 +220,27 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* MAIN REAL A TODO COLOR CON MAESTRÍA */}
           <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl shadow-md flex justify-between items-center relative overflow-hidden">
             {trueMainName !== 'Unknown' && (
-              <img src={`https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${trueMainName}_0.jpg`} className="absolute -right-16 -top-4 w-64 h-auto object-cover opacity-30 grayscale mix-blend-lighten" alt="Champion Background" onError={(e) => { e.target.style.display = 'none'; }}/>
+              <div 
+                className="absolute inset-0 z-0 bg-cover bg-right bg-no-repeat opacity-50"
+                style={{ backgroundImage: `url(https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${trueMainName}_0.jpg)` }}
+              />
             )}
-            <div className="relative z-10">
-              <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wide">Main Real (Maestría)</div>
-              <div className="text-2xl font-extrabold text-white mt-1">{trueMainName}</div>
+            <div className="absolute inset-0 z-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent" />
+
+            <div className="relative z-10 py-1">
+              <div className="text-[11px] text-blue-400 font-bold uppercase tracking-wider">Main Real (Maestría)</div>
+              <div className="text-2xl font-extrabold text-white mt-0.5 drop-shadow-md">{trueMainName}</div>
+              <div className="text-xs text-slate-300 mt-1 flex items-center gap-2 font-medium">
+                <span className="bg-blue-600/80 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow">
+                  Nivel {playerData.championLevel || 0}
+                </span>
+                <span className="text-slate-300 drop-shadow">
+                  {(playerData.championPoints || 0).toLocaleString()} Pts
+                </span>
+              </div>
             </div>
           </div>
         </div>

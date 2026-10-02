@@ -73,7 +73,6 @@ export default function MatchCard({ match, patchVersion, currentRegion }) {
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          {/* Campeón */}
           <div className="relative shrink-0">
             <img 
               src={`https://ddragon.leagueoflegends.com/cdn/${patchVersion}/img/champion/${match.championName}.png`} 
@@ -83,7 +82,6 @@ export default function MatchCard({ match, patchVersion, currentRegion }) {
             />
           </div>
           
-          {/* Hechizos y Runas */}
           <div className="flex gap-1 shrink-0">
             <div className="flex flex-col gap-0.5">
               {match.spells && match.spells.map((spell, i) => (
@@ -100,7 +98,6 @@ export default function MatchCard({ match, patchVersion, currentRegion }) {
             </div>
           </div>
 
-          {/* Estado y modo de juego */}
           <div className="ml-2 min-w-0">
             <div className="font-bold text-white text-lg drop-shadow-md leading-tight">{match.championName}</div>
             <div className="text-xs text-slate-300 mt-0.5 drop-shadow flex items-center gap-1.5 flex-wrap">
@@ -121,7 +118,6 @@ export default function MatchCard({ match, patchVersion, currentRegion }) {
               {match.kills} <span className="text-slate-500 font-normal">/</span> <span className="text-red-400">{match.deaths}</span> <span className="text-slate-500 font-normal">/</span> {match.assists}
             </div>
             
-            {/* INSIGNIAS DE MULTIKILL */}
             {(() => {
               const player = match.participants_data?.find(p => p.championName === match.championName) || {};
               const multi = player.multikill || 0;
@@ -141,7 +137,6 @@ export default function MatchCard({ match, patchVersion, currentRegion }) {
               {item > 0 && <img src={`https://ddragon.leagueoflegends.com/cdn/${patchVersion}/img/item/${item}.png`} className="w-full h-full object-cover" alt="item" />}
             </div>
           ))}
-          {/* Ward (Ítem 7) */}
           <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden border border-slate-600/80 shrink-0 ml-1 bg-slate-950/60 backdrop-blur-sm shadow-inner">
              {match.items[6] > 0 && <img src={`https://ddragon.leagueoflegends.com/cdn/${patchVersion}/img/item/${match.items[6]}.png`} className="w-full h-full object-cover" alt="trinket" />}
           </div>
@@ -156,7 +151,6 @@ export default function MatchCard({ match, patchVersion, currentRegion }) {
         return (
           <div className="relative z-20 border-t border-slate-700/50 bg-slate-950/85 backdrop-blur-md p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
             
-            {/* Equipo Azul */}
             <div className="space-y-2">
               <div className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2 border-b border-slate-800 pb-1">Equipo Azul</div>
               {team100.map((p, i) => {
@@ -165,16 +159,13 @@ export default function MatchCard({ match, patchVersion, currentRegion }) {
                   <div key={i} className="flex items-center justify-between text-xs p-1.5 bg-slate-800/30 hover:bg-slate-800/60 rounded transition-colors gap-2">
                     <div className="flex items-center gap-2 min-w-0">
                       <img src={`https://ddragon.leagueoflegends.com/cdn/${patchVersion}/img/champion/${p.championName}.png`} className="w-6 h-6 rounded border border-blue-900/50 shrink-0 object-cover" alt={p.championName} onError={(e) => { e.target.style.display = 'none'; }} />
-                      <Link 
-                        to={`/profile/${currentRegion}/${encodeURIComponent(p.summonerName)}`} 
-                        className="truncate w-28 sm:w-36 text-blue-300 hover:text-white hover:underline font-medium transition-colors"
-                      >
+                      <Link to={`/profile/${currentRegion}/${encodeURIComponent(p.summonerName)}`} className="truncate w-28 sm:w-36 text-blue-300 hover:text-white hover:underline font-medium transition-colors">
                         {p.summonerName}
                       </Link>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       <span className="text-slate-300 font-mono">{p.kills}/{p.deaths}/{p.assists}</span>
-                      <span className="text-emerald-400 font-bold bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800/60 text-[10px]" title="Participación en Asesinatos">
+                      <span className="text-emerald-400 font-bold bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800/60 text-[10px]">
                         {isNaN(kp) ? 0 : kp}% KP
                       </span>
                     </div>
@@ -183,7 +174,6 @@ export default function MatchCard({ match, patchVersion, currentRegion }) {
               })}
             </div>
 
-            {/* Equipo Rojo */}
             <div className="space-y-2">
               <div className="text-xs font-bold text-red-400 uppercase tracking-wider mb-2 border-b border-slate-800 pb-1">Equipo Rojo</div>
               {team200.map((p, i) => {
@@ -192,16 +182,13 @@ export default function MatchCard({ match, patchVersion, currentRegion }) {
                   <div key={i} className="flex items-center justify-between text-xs p-1.5 bg-slate-800/30 hover:bg-slate-800/60 rounded transition-colors gap-2">
                     <div className="flex items-center gap-2 min-w-0">
                       <img src={`https://ddragon.leagueoflegends.com/cdn/${patchVersion}/img/champion/${p.championName}.png`} className="w-6 h-6 rounded border border-red-900/50 shrink-0 object-cover" alt={p.championName} onError={(e) => { e.target.style.display = 'none'; }} />
-                      <Link 
-                        to={`/profile/${currentRegion}/${encodeURIComponent(p.summonerName)}`} 
-                        className="truncate w-28 sm:w-36 text-blue-300 hover:text-white hover:underline font-medium transition-colors"
-                      >
+                      <Link to={`/profile/${currentRegion}/${encodeURIComponent(p.summonerName)}`} className="truncate w-28 sm:w-36 text-blue-300 hover:text-white hover:underline font-medium transition-colors">
                         {p.summonerName}
                       </Link>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       <span className="text-slate-300 font-mono">{p.kills}/{p.deaths}/{p.assists}</span>
-                      <span className="text-emerald-400 font-bold bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800/60 text-[10px]" title="Participación en Asesinatos">
+                      <span className="text-emerald-400 font-bold bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800/60 text-[10px]">
                         {isNaN(kp) ? 0 : kp}% KP
                       </span>
                     </div>
