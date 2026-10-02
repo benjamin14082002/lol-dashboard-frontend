@@ -10,7 +10,7 @@ export default function ValorantDashboard() {
   const [error, setError] = useState('');
   
   const [gameAssets, setGameAssets] = useState({ agents: {}, maps: {} });
-  const [expandedMatchId, setExpandedMatchId] = useState(null); // Controla qué partida está abierta
+  const [expandedMatchId, setExpandedMatchId] = useState(null);
 
   const API_BASE_URL = 'https://lol-dashboard-backend.onrender.com';
 
@@ -43,7 +43,27 @@ export default function ValorantDashboard() {
     fetchAssets();
   }, []);
 
-  // Separamos la lógica de búsqueda para poder usarla al hacer clic en un jugador
+  // Función para calcular el tiempo transcurrido
+  const getTimeAgo = (timestampSecs) => {
+    if (!timestampSecs) return '';
+    const now = new Date();
+    const matchDate = new Date(timestampSecs * 1000);
+    const diffMs = now - matchDate;
+    
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffWeeks = Math.floor(diffDays / 7);
+    const diffMonths = Math.floor(diffDays / 30);
+
+    if (diffMins < 1) return 'Hace instantes';
+    if (diffMins < 60) return `Hace ${diffMins} min`;
+    if (diffHours < 24) return `Hace ${diffHours} hora${diffHours !== 1 ? 's' : ''}`;
+    if (diffDays < 7) return `Hace ${diffDays} día${diffDays !== 1 ? 's' : ''}`;
+    if (diffWeeks < 4) return `Hace ${diffWeeks} sem`;
+    return `Hace ${diffMonths} mes${diffMonths !== 1 ? 'es' : ''}`;
+  };
+
   const executeSearch = async (gameName, tagLine, searchRegion) => {
     setLoading(true);
     setError('');
@@ -109,7 +129,7 @@ export default function ValorantDashboard() {
       ) : (
         <div className="w-full max-w-5xl mx-auto space-y-6">
           
-          {/* NUEVA BARRA SUPERIOR DE BÚSQUEDA */}
+          {/* BARRA SUPERIOR DE BÚSQUEDA */}
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-900/60 p-3 rounded-xl border border-slate-800 shadow-md">
             <button onClick={() => setStats(null)} className="text-slate-400 hover:text-white text-sm font-bold flex items-center gap-2 transition-colors">
               ← Inicio
@@ -128,6 +148,7 @@ export default function ValorantDashboard() {
             </form>
           </div>
 
+          {/* ENCABEZADO DE PERFIL */}
           <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-xl flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:justify-between shadow-lg relative overflow-hidden">
             {stats.profile.cardImage && (
               <div className="absolute inset-0 opacity-10 blur-xl pointer-events-none" style={{ backgroundImage: `url(${stats.profile.cardImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
@@ -166,6 +187,7 @@ export default function ValorantDashboard() {
             </div>
           </div>
 
+          {/* HISTORIAL DE PARTIDAS */}
           <div>
             {error && <p className="text-red-400 text-sm mb-3 text-center">{error}</p>}
             <h4 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-3">Últimas Partidas (Clic para detalles)</h4>
@@ -214,7 +236,6 @@ export default function ValorantDashboard() {
 
                   return (
                     <div key={index} className="flex flex-col">
-                      {/* TARJETA PRINCIPAL (Clickeable) */}
                       <div 
                         onClick={() => setExpandedMatchId(isExpanded ? null : match.matchId)} 
                         className={`relative overflow-hidden border ${borderColor} ${isExpanded ? 'rounded-t-lg border-b-0' : 'rounded-lg'} cursor-pointer transition-all shadow-md group`}
@@ -235,9 +256,18 @@ export default function ValorantDashboard() {
                             </div>
                             <div>
                               <div className="font-bold text-white text-lg drop-shadow-md">{match.agentName || 'Desconocido'}</div>
-                              <div className="text-xs text-slate-300 mt-0.5 drop-shadow">
-                                Mapa: <span className="font-semibold text-white">{match.mapName}</span> • {match.gameMode}
+                              
+                              {/* NUEVA LÍNEA CON EL TIEMPO TRANSCURRIDO */}
+                              <div className="text-xs text-slate-300 mt-0.5 drop-shadow flex items-center gap-1.5 flex-wrap">
+                                <span>Mapa: <span className="font-semibold text-white">{match.mapName}</span></span>
+                                <span className="text-slate-500">•</span> 
+                                <span>{match.gameMode}</span>
+                                <span className="text-slate-500">•</span>
+                                <span className="text-red-300 font-medium flex items-center gap-1">
+                                  🕒 {getTimeAgo(match.gameStart)}
+                                </span>
                               </div>
+
                             </div>
                           </div>
                           <div className="flex justify-center w-full sm:w-1/3">
@@ -256,7 +286,6 @@ export default function ValorantDashboard() {
                         </div>
                       </div>
 
-                      {/* DESGLOSE DE JUGADORES (Se muestra si está expandido) */}
                       {isExpanded && (
                         <div className={`bg-slate-900 border ${borderColor} border-t-0 rounded-b-lg p-4 grid grid-cols-1 sm:grid-cols-2 gap-6 shadow-inner`}>
                            <div>
