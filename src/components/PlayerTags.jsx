@@ -23,7 +23,7 @@ export default function PlayerTags({ matches, stats }) {
     });
   }
 
-  // 2. Analizar campeones principales en las últimas 10 partidas
+  // 2. Analizar campeones principales en las últimas partidas
   const champCounts = {};
   matches.forEach(m => {
     champCounts[m.championName] = (champCounts[m.championName] || 0) + 1;
@@ -40,18 +40,24 @@ export default function PlayerTags({ matches, stats }) {
     }
   });
 
-  // 3. Analizar promedio de muertes (Demasiada confianza)
+  // 3. Analizar promedio de muertes y juego agresivo
   const totalDeaths = matches.reduce((acc, m) => acc + m.deaths, 0);
   const avgDeaths = (totalDeaths / matches.length).toFixed(1);
-  if (avgDeaths >= 6) {
+  if (avgDeaths >= 5.5) {
     tags.push({ 
       text: "Demasiada confianza", 
       type: "red", 
       desc: `Promedia un alto índice de muertes por partida (${avgDeaths}), lo que suele indicar jugadas demasiado agresivas o arriesgadas.` 
     });
+  } else if (avgDeaths <= 3.5) {
+    tags.push({ 
+      text: "Cauteloso", 
+      type: "blue", 
+      desc: `Mantiene un promedio bajo de muertes (${avgDeaths}), priorizando la supervivencia y el posicionamiento.` 
+    });
   }
 
-  // 4. Analizar KDA global
+  // 4. Analizar KDA y estilo de impacto global
   const kdaNum = parseFloat(stats?.kda || 0);
   if (kdaNum >= 3.5) {
     tags.push({ 
@@ -67,6 +73,29 @@ export default function PlayerTags({ matches, stats }) {
     });
   }
 
+  // 5. Nuevas etiquetas basadas en Kills y Asistencias promedio
+  const totalKills = matches.reduce((acc, m) => acc + m.kills, 0);
+  const totalAssists = matches.reduce((acc, m) => acc + m.assists, 0);
+  const avgKills = totalKills / matches.length;
+  const avgAssists = totalAssists / matches.length;
+
+  if (avgKills >= 7) {
+    tags.push({ 
+      text: "Asesino Serial", 
+      type: "green", 
+      desc: `Tiene un promedio alto de bajas por partida (${avgKills.toFixed(1)}), cazando enemigos constantemente.` 
+    });
+  }
+
+  if (avgAssists >= 9) {
+    tags.push({ 
+      text: "Buen Compañero", 
+      type: "blue", 
+      desc: `Destaca por su alta participación en asistencias (${avgAssists.toFixed(1)} de promedio), apoyando siempre al equipo.` 
+    });
+  }
+
+  // Si ninguna condición específica resalta de forma fuerte
   if (tags.length === 0) {
     tags.push({ 
       text: "Jugador Estable", 
@@ -84,11 +113,12 @@ export default function PlayerTags({ matches, stats }) {
           if (tag.type === "green") styles = "bg-emerald-950/40 text-emerald-400 border-emerald-500/50";
           if (tag.type === "red") styles = "bg-red-950/40 text-red-400 border-red-500/50";
           if (tag.type === "yellow") styles = "bg-amber-950/40 text-amber-400 border-amber-500/50";
+          if (tag.type === "blue") styles = "bg-blue-950/40 text-blue-400 border-blue-500/50";
 
           return (
             <span 
               key={idx} 
-              title={tag.desc} // <-- Aquí se activa el texto flotante nativo al pasar el cursor
+              title={tag.desc} 
               className={`text-xs font-semibold px-3 py-1.5 rounded-lg border shadow-sm cursor-help transition-transform hover:scale-105 ${styles}`}
             >
               {tag.text}
