@@ -111,15 +111,26 @@ export default function MatchCard({ match, patchVersion, currentRegion }) {
           </div>
         </div>
         
-        {/* RESULTADO Y KDA */}
+        {/* RESULTADO Y KDA CON MULTIKILLS */}
         <div className="flex flex-row sm:flex-col items-center justify-between sm:justify-center w-full sm:w-auto px-1 sm:px-4 gap-2 sm:gap-0">
           <div className={`font-extrabold uppercase tracking-widest text-lg drop-shadow-md ${textColor}`}>
             {isWin ? 'VICTORIA' : 'DERROTA'}
           </div>
-          <div className="text-center">
+          <div className="text-center flex flex-col items-center">
             <div className="font-bold text-slate-200 text-sm sm:text-base tracking-wide drop-shadow-md">
               {match.kills} <span className="text-slate-500 font-normal">/</span> <span className="text-red-400">{match.deaths}</span> <span className="text-slate-500 font-normal">/</span> {match.assists}
             </div>
+            
+            {/* INSIGNIAS DE MULTIKILL */}
+            {(() => {
+              const player = match.participants_data?.find(p => p.championName === match.championName) || {};
+              const multi = player.multikill || 0;
+              if (multi === 2) return <span className="mt-1 bg-slate-700/80 border border-slate-600 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-md">DOUBLE KILL</span>;
+              if (multi === 3) return <span className="mt-1 bg-blue-600/90 border border-blue-400 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-md">TRIPLE KILL</span>;
+              if (multi === 4) return <span className="mt-1 bg-purple-600/90 border border-purple-400 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-md">QUADRA KILL</span>;
+              if (multi >= 5) return <span className="mt-1 bg-gradient-to-r from-yellow-600 to-yellow-400 border border-yellow-300 text-white px-2 py-0.5 rounded text-[10px] font-extrabold shadow-[0_0_10px_rgba(250,204,21,0.6)] animate-pulse">PENTA KILL</span>;
+              return null;
+            })()}
           </div>
         </div>
 
