@@ -231,7 +231,7 @@ export default function Dashboard() {
             <div className="absolute inset-0 z-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent" />
 
             <div className="relative z-10 py-1">
-              <div className="text-[11px] text-blue-400 font-bold uppercase tracking-wider">Main Real (Maestría)</div>
+              <div className="text-[11px] text-blue-400 font-bold uppercase tracking-wider">Main(Maestría)</div>
               <div className="text-2xl font-extrabold text-white mt-0.5 drop-shadow-md">{trueMainName}</div>
               <div className="text-xs text-slate-300 mt-1 flex items-center gap-2 font-medium">
                 <span className="bg-blue-600/80 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow">
