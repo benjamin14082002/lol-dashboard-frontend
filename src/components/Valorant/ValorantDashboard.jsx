@@ -9,7 +9,8 @@ export default function ValorantDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const [gameAssets, setGameAssets] = useState({ agents: {}, maps: {} });
+  // Agregamos agentsBust para guardar los renders 3D (medio cuerpo)
+  const [gameAssets, setGameAssets] = useState({ agents: {}, agentsBust: {}, maps: {} });
   const [expandedMatchId, setExpandedMatchId] = useState(null);
 
   const API_BASE_URL = 'https://lol-dashboard-backend.onrender.com';
@@ -23,8 +24,11 @@ export default function ValorantDashboard() {
         ]);
 
         const agentsData = {};
+        const agentsBustData = {};
         agentsRes.data.data.forEach(agent => {
           agentsData[agent.displayName.toLowerCase()] = agent.displayIcon;
+          // Guardamos el render de medio cuerpo para el efecto 3D
+          agentsBustData[agent.displayName.toLowerCase()] = agent.bustPortrait || agent.displayIcon; 
         });
 
         const mapsData = {};
@@ -35,7 +39,7 @@ export default function ValorantDashboard() {
         mapsData['summit'] = mapsData['ascent'] || mapsData['icebox']; 
         mapsData['corrode'] = mapsData['fracture'];
 
-        setGameAssets({ agents: agentsData, maps: mapsData });
+        setGameAssets({ agents: agentsData, agentsBust: agentsBustData, maps: mapsData });
       } catch (err) {
         console.error('Error cargando los gráficos de Valorant:', err);
       }
@@ -43,7 +47,6 @@ export default function ValorantDashboard() {
     fetchAssets();
   }, []);
 
-  // Función para calcular el tiempo transcurrido
   const getTimeAgo = (timestampSecs) => {
     if (!timestampSecs) return '';
     const now = new Date();
@@ -53,15 +56,12 @@ export default function ValorantDashboard() {
     const diffMins = Math.floor(diffMs / (1000 * 60));
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    const diffWeeks = Math.floor(diffDays / 7);
-    const diffMonths = Math.floor(diffDays / 30);
-
+    
     if (diffMins < 1) return 'Hace instantes';
     if (diffMins < 60) return `Hace ${diffMins} min`;
     if (diffHours < 24) return `Hace ${diffHours} hora${diffHours !== 1 ? 's' : ''}`;
     if (diffDays < 7) return `Hace ${diffDays} día${diffDays !== 1 ? 's' : ''}`;
-    if (diffWeeks < 4) return `Hace ${diffWeeks} sem`;
-    return `Hace ${diffMonths} mes${diffMonths !== 1 ? 'es' : ''}`;
+    return `Hace ${Math.floor(diffDays / 7)} sem`;
   };
 
   const executeSearch = async (gameName, tagLine, searchRegion) => {
@@ -96,6 +96,41 @@ export default function ValorantDashboard() {
     executeSearch(playerName, playerTag, region);
   };
 
+  // --- CÁLCULOS DEL RESUMEN DE RENDIMIENTO ---
+  let winrate = 0, avgKills = 0, avgDeaths = 0, avgAssists = 0;
+  let mostPlayedAgent = 'Desconocido';
+  let totalMatches = 0;
+  let kdaRatioColor = 'text-slate-400';
+  let avgKdaStr = '0.00';
+
+  if (stats && stats.matches && stats.matches.length > 0) {
+    totalMatches = stats.matches.length;
+    let wins = 0, totalKills = 0, totalDeaths = 0, totalAssists = 0;
+    const agentCount = {};
+
+    stats.matches.forEach(m => {
+      if (m.won) wins++;
+      totalKills += m.kills;
+      totalDeaths += m.deaths;
+      totalAssists += m.assists;
+      agentCount[m.agentName] = (agentCount[m.agentName] || 0) + 1;
+    });
+
+    winrate = Math.round((wins / totalMatches) * 100);
+    avgKills = (totalKills / totalMatches).toFixed(1);
+    avgDeaths = (totalDeaths / totalMatches).toFixed(1);
+    avgAssists = (totalAssists / totalMatches).toFixed(1);
+    
+    avgKdaStr = totalDeaths === 0 ? 'Perfecto' : ((totalKills + totalAssists) / totalDeaths).toFixed(2);
+    if (avgKdaStr >= 3 || avgKdaStr === 'Perfecto') kdaRatioColor = 'text-yellow-400';
+    else if (avgKdaStr >= 2) kdaRatioColor = 'text-emerald-400';
+
+    let maxCount = 0;
+    for (const [agent, count] of Object.entries(agentCount)) {
+      if (count > maxCount) { maxCount = count; mostPlayedAgent = agent; }
+    }
+  }
+
   return (
     <div className="flex flex-col items-center justify-center p-4 sm:p-6 text-slate-100 min-h-[80vh]">
       {!stats ? (
@@ -129,7 +164,6 @@ export default function ValorantDashboard() {
       ) : (
         <div className="w-full max-w-5xl mx-auto space-y-6">
           
-          {/* BARRA SUPERIOR DE BÚSQUEDA */}
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-900/60 p-3 rounded-xl border border-slate-800 shadow-md">
             <button onClick={() => setStats(null)} className="text-slate-400 hover:text-white text-sm font-bold flex items-center gap-2 transition-colors">
               ← Inicio
@@ -187,10 +221,51 @@ export default function ValorantDashboard() {
             </div>
           </div>
 
-          {/* HISTORIAL DE PARTIDAS */}
+          {/* NUEVO: PANEL DE RENDIMIENTO */}
+          {totalMatches > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl shadow-md flex justify-between items-center">
+                 <div>
+                    <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wide">Winrate ({totalMatches} Partidas)</div>
+                    <div className={`text-3xl font-extrabold mt-1 ${winrate >= 50 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {winrate}%
+                    </div>
+                 </div>
+                 <div className="text-4xl opacity-80">{winrate >= 50 ? '📈' : '📉'}</div>
+              </div>
+              
+              <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl shadow-md flex justify-between items-center">
+                 <div>
+                    <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wide">KDA Promedio</div>
+                    <div className="text-2xl font-extrabold text-white mt-1">
+                      {avgKills} <span className="text-slate-600 font-normal">/</span> <span className="text-red-400">{avgDeaths}</span> <span className="text-slate-600 font-normal">/</span> {avgAssists}
+                    </div>
+                    <div className="text-xs text-slate-400 mt-1 font-medium">
+                      Ratio: <span className={`${kdaRatioColor} font-bold`}>{avgKdaStr}</span>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl shadow-md flex justify-between items-center relative overflow-hidden">
+                 {gameAssets.agentsBust[mostPlayedAgent.toLowerCase()] && (
+                   <img 
+                     src={gameAssets.agentsBust[mostPlayedAgent.toLowerCase()]} 
+                     className="absolute -right-4 -bottom-6 w-32 h-32 object-contain opacity-40 grayscale"
+                     alt="Agent Background"
+                   />
+                 )}
+                 <div className="relative z-10">
+                    <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wide">Agente Principal</div>
+                    <div className="text-2xl font-extrabold text-white mt-1">{mostPlayedAgent}</div>
+                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* HISTORIAL DE PARTIDAS CON RENDERS 3D */}
           <div>
             {error && <p className="text-red-400 text-sm mb-3 text-center">{error}</p>}
-            <h4 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-3">Últimas Partidas (Clic para detalles)</h4>
+            <h4 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-3">Últimas Partidas</h4>
             <div className="space-y-4">
               {stats.matches && stats.matches.length > 0 ? (
                 stats.matches.map((match, index) => {
@@ -200,7 +275,9 @@ export default function ValorantDashboard() {
                   const bgColor = isWon ? 'bg-emerald-900/40' : 'bg-red-900/40';
                   const textColor = isWon ? 'text-emerald-400' : 'text-red-400';
 
-                  const agentImg = gameAssets.agents[match.agentName?.toLowerCase()];
+                  // Obtenemos los dos tipos de imágenes
+                  const agentIcon = gameAssets.agents[match.agentName?.toLowerCase()];
+                  const agentBust = gameAssets.agentsBust[match.agentName?.toLowerCase()];
                   const mapImg = gameAssets.maps[match.mapName?.toLowerCase()];
 
                   const kdaRatio = match.deaths === 0 ? 'Perfecto' : ((match.kills + match.assists) / match.deaths).toFixed(2);
@@ -212,11 +289,7 @@ export default function ValorantDashboard() {
                   const blueTeam = match.allPlayers?.filter(p => p.team === 'Blue') || [];
 
                   const renderPlayerRow = (player) => (
-                    <div 
-                      key={player.puuid} 
-                      onClick={(e) => { e.stopPropagation(); handlePlayerClick(player.name, player.tag); }}
-                      className="flex items-center justify-between p-2 hover:bg-slate-800/80 cursor-pointer rounded transition-colors group"
-                    >
+                    <div key={player.puuid} onClick={(e) => { e.stopPropagation(); handlePlayerClick(player.name, player.tag); }} className="flex items-center justify-between p-2 hover:bg-slate-800/80 cursor-pointer rounded transition-colors group">
                       <div className="flex items-center gap-3">
                         {gameAssets.agents[player.agent?.toLowerCase()] ? (
                           <img src={gameAssets.agents[player.agent?.toLowerCase()]} className="w-8 h-8 rounded border border-slate-700 bg-slate-900" alt={player.agent} />
@@ -236,45 +309,50 @@ export default function ValorantDashboard() {
 
                   return (
                     <div key={index} className="flex flex-col">
-                      <div 
-                        onClick={() => setExpandedMatchId(isExpanded ? null : match.matchId)} 
-                        className={`relative overflow-hidden border ${borderColor} ${isExpanded ? 'rounded-t-lg border-b-0' : 'rounded-lg'} cursor-pointer transition-all shadow-md group`}
-                      >
+                      <div onClick={() => setExpandedMatchId(isExpanded ? null : match.matchId)} className={`relative overflow-hidden border ${borderColor} ${isExpanded ? 'rounded-t-lg border-b-0' : 'rounded-lg'} cursor-pointer transition-all shadow-md group`}>
                         {mapImg && (
                           <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity duration-300" style={{ backgroundImage: `url(${mapImg})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                         )}
                         <div className={`absolute inset-0 ${bgColor} opacity-80`}></div>
 
                         <div className="relative p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                          <div className="flex items-center gap-4 w-full sm:w-1/3">
-                            <div className="w-14 h-14 bg-slate-900 rounded-lg border border-slate-700 overflow-hidden shadow-lg flex-shrink-0">
-                              {agentImg ? (
-                                <img src={agentImg} alt={match.agentName} className="w-full h-full object-cover transform scale-110" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center font-bold text-xs text-red-400 uppercase">{match.agentName ? match.agentName.substring(0, 3) : 'VAL'}</div>
-                              )}
+                          
+                          {/* SECCIÓN DEL AGENTE CON EFECTO 3D */}
+                          <div className="flex items-center gap-5 w-full sm:w-1/3">
+                            <div className="relative w-16 h-16 flex-shrink-0">
+                               {/* Base oscura para dar profundidad */}
+                               <div className="absolute inset-x-0 bottom-0 h-10 bg-slate-950/60 rounded border border-slate-700/50 shadow-inner"></div>
+                               
+                               {/* Imagen sobresaliente (BustPortrait) */}
+                               {agentBust ? (
+                                 <img 
+                                   src={agentBust} 
+                                   className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[120%] h-[120%] object-contain drop-shadow-xl scale-125" 
+                                   alt={match.agentName} 
+                                 />
+                               ) : (
+                                 <img src={agentIcon} className="absolute inset-0 w-full h-full rounded object-cover" alt="Agent" />
+                               )}
                             </div>
+
                             <div>
                               <div className="font-bold text-white text-lg drop-shadow-md">{match.agentName || 'Desconocido'}</div>
-                              
-                              {/* NUEVA LÍNEA CON EL TIEMPO TRANSCURRIDO */}
                               <div className="text-xs text-slate-300 mt-0.5 drop-shadow flex items-center gap-1.5 flex-wrap">
                                 <span>Mapa: <span className="font-semibold text-white">{match.mapName}</span></span>
                                 <span className="text-slate-500">•</span> 
                                 <span>{match.gameMode}</span>
                                 <span className="text-slate-500">•</span>
-                                <span className="text-red-300 font-medium flex items-center gap-1">
-                                  🕒 {getTimeAgo(match.gameStart)}
-                                </span>
+                                <span className="text-red-300 font-medium flex items-center gap-1">🕒 {getTimeAgo(match.gameStart)}</span>
                               </div>
-
                             </div>
                           </div>
+
                           <div className="flex justify-center w-full sm:w-1/3">
                             <div className={`font-extrabold uppercase tracking-widest text-xl drop-shadow-md ${textColor}`}>
                               {isWon ? 'VICTORIA' : 'DERROTA'}
                             </div>
                           </div>
+                          
                           <div className="text-center sm:text-right w-full sm:w-1/3">
                             <div className="font-bold text-white text-lg tracking-wide drop-shadow-md">
                               {match.kills} <span className="text-slate-500 font-normal">/</span> <span className="text-red-400">{match.deaths}</span> <span className="text-slate-500 font-normal">/</span> {match.assists}
@@ -287,18 +365,14 @@ export default function ValorantDashboard() {
                       </div>
 
                       {isExpanded && (
-                        <div className={`bg-slate-900 border ${borderColor} border-t-0 rounded-b-lg p-4 grid grid-cols-1 sm:grid-cols-2 gap-6 shadow-inner`}>
+                        <div className={`bg-slate-900 border ${borderColor} border-t-0 rounded-b-lg p-4 grid grid-cols-1 sm:grid-cols-2 gap-6 shadow-inner relative z-20`}>
                            <div>
                              <h5 className="text-xs font-bold text-blue-400 mb-2 uppercase tracking-wider border-b border-slate-800 pb-1">Equipo Azul</h5>
-                             <div className="space-y-1">
-                               {blueTeam.map(p => renderPlayerRow(p))}
-                             </div>
+                             <div className="space-y-1">{blueTeam.map(p => renderPlayerRow(p))}</div>
                            </div>
                            <div>
                              <h5 className="text-xs font-bold text-red-400 mb-2 uppercase tracking-wider border-b border-slate-800 pb-1">Equipo Rojo</h5>
-                             <div className="space-y-1">
-                               {redTeam.map(p => renderPlayerRow(p))}
-                             </div>
+                             <div className="space-y-1">{redTeam.map(p => renderPlayerRow(p))}</div>
                            </div>
                         </div>
                       )}
@@ -307,7 +381,7 @@ export default function ValorantDashboard() {
                 })
               ) : (
                 <div className="text-center py-8 text-slate-500 bg-slate-900/40 border border-slate-800 rounded-lg text-sm">
-                  No se encontraron partidas recientes.
+                  No se encontraron partidas reales recientes.
                 </div>
               )}
             </div>
