@@ -30,11 +30,10 @@ export default function ValorantDashboard() {
 
         const mapsData = {};
         mapsRes.data.data.forEach(map => {
-          // Usamos listViewIcon porque es panorámico y queda perfecto de fondo
           mapsData[map.displayName.toLowerCase()] = map.listViewIcon || map.splash;
         });
 
-        // Mapeo de codenames internos comunes que a veces envía la API
+        // Mapeo de codenames internos comunes
         mapsData['summit'] = mapsData['ascent'] || mapsData['icebox']; 
         mapsData['corrode'] = mapsData['fracture'];
 
@@ -129,18 +128,63 @@ export default function ValorantDashboard() {
             ← Volver a buscar
           </button>
 
-          <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-lg flex items-center justify-between shadow">
-            <div>
-              <div className="text-[11px] font-semibold text-red-400 uppercase tracking-wider">Perfil Encontrado</div>
-              <h3 className="text-lg font-bold text-white">
-                {stats.profile.gameName} <span className="text-slate-400 font-normal">#{stats.profile.tagLine}</span>
-              </h3>
+          {/* ENCABEZADO COMPLETO DEL PERFIL */}
+          <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-xl flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:justify-between shadow-lg relative overflow-hidden">
+            
+            {stats.profile.cardImage && (
+              <div 
+                className="absolute inset-0 opacity-10 blur-xl pointer-events-none"
+                style={{ backgroundImage: `url(${stats.profile.cardImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+              />
+            )}
+
+            <div className="flex items-center gap-5 relative z-10">
+              <div className="relative">
+                {stats.profile.cardImage ? (
+                  <img src={stats.profile.cardImage} alt="Player Card" className="w-20 h-20 rounded-xl border-2 border-slate-700 shadow-md object-cover" />
+                ) : (
+                  <div className="w-20 h-20 bg-slate-800 rounded-xl border-2 border-slate-700 flex items-center justify-center">
+                     <span className="text-slate-500 text-xs">Sin Foto</span>
+                  </div>
+                )}
+                <div className="absolute -bottom-2.5 left-1/2 transform -translate-x-1/2 bg-slate-950 border border-slate-600 px-3 py-0.5 rounded-full text-[10px] font-bold text-white shadow-lg whitespace-nowrap">
+                  LVL {stats.profile.level}
+                </div>
+              </div>
+              
+              <div className="text-center sm:text-left mt-2 sm:mt-0">
+                <div className="text-[11px] font-semibold text-red-400 uppercase tracking-wider mb-1">Agente Autorizado</div>
+                <h3 className="text-2xl sm:text-3xl font-bold text-white leading-none drop-shadow-md">
+                  {stats.profile.gameName}
+                </h3>
+                <div className="text-slate-400 font-medium text-sm mt-1.5 flex items-center justify-center sm:justify-start gap-2">
+                  <span>#{stats.profile.tagLine}</span>
+                  <span className="text-slate-600">•</span> 
+                  <span className="bg-slate-800 text-red-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-slate-700">
+                    {stats.profile.region}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="bg-slate-800 px-3 py-1 rounded text-xs text-slate-300 border border-slate-700">
-              Región: <span className="text-red-400 font-bold uppercase">{stats.profile.region}</span>
+
+            <div className="flex items-center gap-4 bg-slate-800/40 px-5 py-3 rounded-xl border border-slate-700/50 mt-4 sm:mt-0 relative z-10 backdrop-blur-sm">
+               {stats.profile.rankImage ? (
+                 <img src={stats.profile.rankImage} alt="Rank" className="w-14 h-14 drop-shadow-lg" />
+               ) : (
+                 <div className="w-14 h-14 bg-slate-700/50 rounded-full flex items-center justify-center border border-slate-600">
+                   <span className="text-slate-400 text-[10px] font-bold">N/A</span>
+                 </div>
+               )}
+               <div className="text-center sm:text-right">
+                 <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wide">Rango Actual</div>
+                 <div className="text-white font-extrabold text-lg leading-tight mt-0.5">
+                   {stats.profile.rankName || 'Unranked'}
+                 </div>
+               </div>
             </div>
           </div>
 
+          {/* HISTORIAL DE PARTIDAS */}
           <div>
             <h4 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-3">Últimas Partidas</h4>
             <div className="space-y-3">
@@ -151,20 +195,17 @@ export default function ValorantDashboard() {
                   const bgColor = isWon ? 'bg-emerald-900/40' : 'bg-red-900/40';
                   const textColor = isWon ? 'text-emerald-400' : 'text-red-400';
 
-                  // Asignación de recursos gráficos
                   const agentImg = gameAssets.agents[match.agentName?.toLowerCase()];
                   const mapImg = gameAssets.maps[match.mapName?.toLowerCase()];
 
-                  // Cálculo de KDA Ratio
                   const kdaRatio = match.deaths === 0 ? 'Perfecto' : ((match.kills + match.assists) / match.deaths).toFixed(2);
                   let kdaColor = 'text-slate-400';
-                  if (kdaRatio >= 3 || kdaRatio === 'Perfecto') kdaColor = 'text-yellow-400 font-bold'; // Oro para MVPs
-                  else if (kdaRatio >= 2) kdaColor = 'text-emerald-400 font-bold'; // Verde para buen rendimiento
+                  if (kdaRatio >= 3 || kdaRatio === 'Perfecto') kdaColor = 'text-yellow-400 font-bold';
+                  else if (kdaRatio >= 2) kdaColor = 'text-emerald-400 font-bold';
 
                   return (
                     <div key={index} className={`relative overflow-hidden border ${borderColor} rounded-lg transition-all shadow-md group`}>
                       
-                      {/* Imagen de fondo del mapa */}
                       {mapImg && (
                         <div 
                           className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity duration-300"
@@ -172,10 +213,8 @@ export default function ValorantDashboard() {
                         />
                       )}
                       
-                      {/* Filtro de color sobre el fondo */}
                       <div className={`absolute inset-0 ${bgColor} opacity-80`}></div>
 
-                      {/* Contenido de la tarjeta (Z-index superior) */}
                       <div className="relative p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-4 w-full sm:w-1/3">
                           <div className="w-14 h-14 bg-slate-900 rounded-lg border border-slate-700 overflow-hidden shadow-lg flex-shrink-0">
