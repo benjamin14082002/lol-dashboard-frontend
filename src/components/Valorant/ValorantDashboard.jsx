@@ -12,8 +12,21 @@ export default function ValorantDashboard() {
 
   const API_BASE_URL = 'https://lol-dashboard-backend.onrender.com';
 
+  // Función para extraer el token correctamente del objeto 'user'
+  const getToken = () => {
+    const userStorage = localStorage.getItem('user');
+    if (!userStorage) return null;
+    try {
+      const userData = JSON.parse(userStorage);
+      // Extrae el token (ajusta si tu backend usa otro nombre como userData.access)
+      return userData.token || userData.access || userData.access_token;
+    } catch (e) {
+      return null;
+    }
+  };
+
   const fetchStats = async () => {
-    const token = localStorage.getItem('access_token');
+    const token = getToken();
     if (!token) return;
 
     try {
@@ -35,7 +48,7 @@ export default function ValorantDashboard() {
     setLoading(true);
     setError('');
     
-    const token = localStorage.getItem('access_token');
+    const token = getToken();
     if (!token) {
       setError('No estás autenticado. Inicia sesión primero.');
       setLoading(false);
