@@ -62,12 +62,12 @@ export default function ValorantDashboard() {
                 onChange={(e) => setRegion(e.target.value)}
                 className="w-full sm:w-auto bg-transparent text-white px-4 py-3 sm:py-2 outline-none border-b sm:border-b-0 sm:border-r border-slate-700 text-sm font-semibold cursor-pointer"
               >
-                <option value="latam">LATAM</option>
-                <option value="na">NA</option>
-                <option value="eu">EU</option>
-                <option value="br">BR</option>
-                <option value="ap">AP</option>
-                <option value="kr">KR</option>
+                <option className="bg-slate-900 text-white" value="latam">LATAM</option>
+                <option className="bg-slate-900 text-white" value="na">NA</option>
+                <option className="bg-slate-900 text-white" value="eu">EU</option>
+                <option className="bg-slate-900 text-white" value="br">BR</option>
+                <option className="bg-slate-900 text-white" value="ap">AP</option>
+                <option className="bg-slate-900 text-white" value="kr">KR</option>
               </select>
 
               <input 
