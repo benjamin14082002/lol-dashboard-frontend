@@ -9,7 +9,6 @@ export default function ValorantDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  // Agregamos agentsBust para guardar los renders 3D (medio cuerpo)
   const [gameAssets, setGameAssets] = useState({ agents: {}, agentsBust: {}, maps: {} });
   const [expandedMatchId, setExpandedMatchId] = useState(null);
 
@@ -27,7 +26,6 @@ export default function ValorantDashboard() {
         const agentsBustData = {};
         agentsRes.data.data.forEach(agent => {
           agentsData[agent.displayName.toLowerCase()] = agent.displayIcon;
-          // Guardamos el render de medio cuerpo para el efecto 3D
           agentsBustData[agent.displayName.toLowerCase()] = agent.bustPortrait || agent.displayIcon; 
         });
 
@@ -96,7 +94,6 @@ export default function ValorantDashboard() {
     executeSearch(playerName, playerTag, region);
   };
 
-  // --- CÁLCULOS DEL RESUMEN DE RENDIMIENTO ---
   let winrate = 0, avgKills = 0, avgDeaths = 0, avgAssists = 0;
   let mostPlayedAgent = 'Desconocido';
   let totalMatches = 0;
@@ -182,7 +179,6 @@ export default function ValorantDashboard() {
             </form>
           </div>
 
-          {/* ENCABEZADO DE PERFIL */}
           <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-xl flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:justify-between shadow-lg relative overflow-hidden">
             {stats.profile.cardImage && (
               <div className="absolute inset-0 opacity-10 blur-xl pointer-events-none" style={{ backgroundImage: `url(${stats.profile.cardImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
@@ -208,28 +204,32 @@ export default function ValorantDashboard() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-4 bg-slate-800/40 px-5 py-3 rounded-xl border border-slate-700/50 mt-4 sm:mt-0 relative z-10 backdrop-blur-sm">
+            
+            <div className="flex items-center gap-4 bg-slate-800/40 px-5 py-3 rounded-xl border border-slate-700/50 mt-4 sm:mt-0 relative z-10 backdrop-blur-sm min-w-[200px]">
                {stats.profile.rankImage ? (
                  <img src={stats.profile.rankImage} alt="Rank" className="w-14 h-14 drop-shadow-lg" />
                ) : (
                  <div className="w-14 h-14 bg-slate-700/50 rounded-full flex items-center justify-center border border-slate-600"><span className="text-slate-400 text-[10px] font-bold">N/A</span></div>
                )}
-               <div className="text-center sm:text-right">
+               <div className="flex-1 text-right">
                  <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wide">Rango Actual</div>
                  <div className="text-white font-extrabold text-lg leading-tight mt-0.5">{stats.profile.rankName || 'Unranked'}</div>
+                 
+                 {/* BARRA DE PROGRESO RR */}
+                 <div className="mt-2 w-full bg-slate-900 h-1.5 rounded-full overflow-hidden border border-slate-700">
+                    <div className="bg-red-500 h-full transition-all duration-1000" style={{ width: `${stats.profile.rr || 0}%` }}></div>
+                 </div>
+                 <div className="text-[9px] text-slate-400 mt-1 font-bold tracking-widest">{stats.profile.rr || 0} / 100 RR</div>
                </div>
             </div>
           </div>
 
-          {/* NUEVO: PANEL DE RENDIMIENTO */}
           {totalMatches > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl shadow-md flex justify-between items-center">
                  <div>
                     <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wide">Winrate ({totalMatches} Partidas)</div>
-                    <div className={`text-3xl font-extrabold mt-1 ${winrate >= 50 ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {winrate}%
-                    </div>
+                    <div className={`text-3xl font-extrabold mt-1 ${winrate >= 50 ? 'text-emerald-400' : 'text-red-400'}`}>{winrate}%</div>
                  </div>
                  <div className="text-4xl opacity-80">{winrate >= 50 ? '📈' : '📉'}</div>
               </div>
@@ -248,11 +248,7 @@ export default function ValorantDashboard() {
 
               <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl shadow-md flex justify-between items-center relative overflow-hidden">
                  {gameAssets.agentsBust[mostPlayedAgent.toLowerCase()] && (
-                   <img 
-                     src={gameAssets.agentsBust[mostPlayedAgent.toLowerCase()]} 
-                     className="absolute -right-4 -bottom-6 w-32 h-32 object-contain opacity-40 grayscale"
-                     alt="Agent Background"
-                   />
+                   <img src={gameAssets.agentsBust[mostPlayedAgent.toLowerCase()]} className="absolute -right-4 -bottom-6 w-32 h-32 object-contain opacity-40 grayscale" alt="Agent Background" />
                  )}
                  <div className="relative z-10">
                     <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wide">Agente Principal</div>
@@ -262,7 +258,6 @@ export default function ValorantDashboard() {
             </div>
           )}
 
-          {/* HISTORIAL DE PARTIDAS CON RENDERS 3D */}
           <div>
             {error && <p className="text-red-400 text-sm mb-3 text-center">{error}</p>}
             <h4 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-3">Últimas Partidas</h4>
@@ -275,7 +270,6 @@ export default function ValorantDashboard() {
                   const bgColor = isWon ? 'bg-emerald-900/40' : 'bg-red-900/40';
                   const textColor = isWon ? 'text-emerald-400' : 'text-red-400';
 
-                  // Obtenemos los dos tipos de imágenes
                   const agentIcon = gameAssets.agents[match.agentName?.toLowerCase()];
                   const agentBust = gameAssets.agentsBust[match.agentName?.toLowerCase()];
                   const mapImg = gameAssets.maps[match.mapName?.toLowerCase()];
@@ -287,25 +281,33 @@ export default function ValorantDashboard() {
 
                   const redTeam = match.allPlayers?.filter(p => p.team === 'Red') || [];
                   const blueTeam = match.allPlayers?.filter(p => p.team === 'Blue') || [];
+                  
+                  // Calculamos el MVP (Máximas Kills en toda la partida)
+                  const allPlayers = [...redTeam, ...blueTeam];
+                  const maxKills = allPlayers.length > 0 ? Math.max(...allPlayers.map(p => p.kills)) : 0;
 
-                  const renderPlayerRow = (player) => (
-                    <div key={player.puuid} onClick={(e) => { e.stopPropagation(); handlePlayerClick(player.name, player.tag); }} className="flex items-center justify-between p-2 hover:bg-slate-800/80 cursor-pointer rounded transition-colors group">
-                      <div className="flex items-center gap-3">
-                        {gameAssets.agents[player.agent?.toLowerCase()] ? (
-                          <img src={gameAssets.agents[player.agent?.toLowerCase()]} className="w-8 h-8 rounded border border-slate-700 bg-slate-900" alt={player.agent} />
-                        ) : (
-                          <div className="w-8 h-8 rounded border border-slate-700 bg-slate-900" />
-                        )}
-                        <div className="text-sm">
-                           <span className={`font-bold transition-colors ${player.name === stats.profile.gameName ? 'text-yellow-400' : 'text-slate-200 group-hover:text-white'}`}>{player.name}</span>
-                           <span className="text-slate-500 text-[10px] ml-1">#{player.tag}</span>
+                  const renderPlayerRow = (player) => {
+                    const isMVP = player.kills === maxKills && maxKills > 0;
+                    return (
+                      <div key={player.puuid} onClick={(e) => { e.stopPropagation(); handlePlayerClick(player.name, player.tag); }} className="flex items-center justify-between p-2 hover:bg-slate-800/80 cursor-pointer rounded transition-colors group">
+                        <div className="flex items-center gap-3">
+                          {gameAssets.agents[player.agent?.toLowerCase()] ? (
+                            <img src={gameAssets.agents[player.agent?.toLowerCase()]} className="w-8 h-8 rounded border border-slate-700 bg-slate-900" alt={player.agent} />
+                          ) : (
+                            <div className="w-8 h-8 rounded border border-slate-700 bg-slate-900" />
+                          )}
+                          <div className="text-sm flex items-center">
+                             <span className={`font-bold transition-colors ${player.name === stats.profile.gameName ? 'text-yellow-400' : 'text-slate-200 group-hover:text-white'}`}>{player.name}</span>
+                             <span className="text-slate-500 text-[10px] ml-1 mr-1">#{player.tag}</span>
+                             {isMVP && <span title="Match MVP (Top Fragger)" className="text-yellow-400 text-xs drop-shadow-md">👑</span>}
+                          </div>
+                        </div>
+                        <div className="text-xs font-mono text-slate-300">
+                          {player.kills} / {player.deaths} / {player.assists}
                         </div>
                       </div>
-                      <div className="text-xs font-mono text-slate-300">
-                        {player.kills} / {player.deaths} / {player.assists}
-                      </div>
-                    </div>
-                  );
+                    );
+                  };
 
                   return (
                     <div key={index} className="flex flex-col">
@@ -316,25 +318,15 @@ export default function ValorantDashboard() {
                         <div className={`absolute inset-0 ${bgColor} opacity-80`}></div>
 
                         <div className="relative p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                          
-                          {/* SECCIÓN DEL AGENTE CON EFECTO 3D */}
                           <div className="flex items-center gap-5 w-full sm:w-1/3">
                             <div className="relative w-16 h-16 flex-shrink-0">
-                               {/* Base oscura para dar profundidad */}
                                <div className="absolute inset-x-0 bottom-0 h-10 bg-slate-950/60 rounded border border-slate-700/50 shadow-inner"></div>
-                               
-                               {/* Imagen sobresaliente (BustPortrait) */}
                                {agentBust ? (
-                                 <img 
-                                   src={agentBust} 
-                                   className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[120%] h-[120%] object-contain drop-shadow-xl scale-125" 
-                                   alt={match.agentName} 
-                                 />
+                                 <img src={agentBust} className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[120%] h-[120%] object-contain drop-shadow-xl scale-125" alt={match.agentName} />
                                ) : (
                                  <img src={agentIcon} className="absolute inset-0 w-full h-full rounded object-cover" alt="Agent" />
                                )}
                             </div>
-
                             <div>
                               <div className="font-bold text-white text-lg drop-shadow-md">{match.agentName || 'Desconocido'}</div>
                               <div className="text-xs text-slate-300 mt-0.5 drop-shadow flex items-center gap-1.5 flex-wrap">
