@@ -59,65 +59,71 @@ export default function MatchCard({ match, patchVersion, currentRegion }) {
       
       {/* VISTA PRINCIPAL (Clicable) */}
       <div 
-        className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-800/40 transition-colors"
+        className="p-3 sm:p-4 flex items-center justify-between cursor-pointer hover:bg-slate-800/40 transition-colors gap-2"
         onClick={() => setExpanded(!expanded)}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Campeón */}
           <img 
             src={`https://ddragon.leagueoflegends.com/cdn/${patchVersion}/img/champion/${match.championName}.png`} 
-            className="w-14 h-14 rounded-full border border-slate-600 shadow-sm" 
+            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full border border-slate-600 shadow-sm shrink-0" 
             alt={match.championName}
           />
           
-          <div className="flex flex-col gap-1 ml-1">
+          {/* Hechizos (Columna de 2 compacta) */}
+          <div className="flex flex-col gap-0.5 shrink-0">
             {match.spells && match.spells.map((spell, i) => (
               <img 
                 key={`spell-${i}`}
                 src={`https://ddragon.leagueoflegends.com/cdn/${patchVersion}/img/spell/${getSpellIcon(spell)}.png`}
-                className="w-6 h-6 rounded" alt="spell"
+                className="w-5 h-5 sm:w-6 sm:h-6 rounded object-cover" alt="spell"
                 onError={(e) => { e.target.style.display = 'none'; }}
               />
             ))}
           </div>
 
-          <div className="flex flex-col gap-1">
+          {/* Runas (Columna de 2 compacta) */}
+          <div className="flex flex-col gap-0.5 shrink-0">
              {match.runes && match.runes[0] !== 0 && (
               <img 
                 src={`https://ddragon.leagueoflegends.com/cdn/img/perk-images/${getKeystoneIcon(match.runes[0])}`}
-                className="w-6 h-6 rounded-full bg-slate-900 border border-slate-700 p-0.5 object-cover" alt="primary rune"
+                className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-900 border border-slate-700 p-0.5 object-cover" alt="primary rune"
                 onError={(e) => { e.target.style.display = 'none'; }}
               />
             )}
             {match.runes && match.runes[1] !== 0 && (
               <img 
                 src={getSecondaryRuneIcon(match.runes[1])}
-                className="w-6 h-6 rounded-full bg-slate-900 border border-slate-700 p-1" alt="secondary rune"
+                className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-900 border border-slate-700 p-0.5 object-cover" alt="secondary rune"
                 onError={(e) => { e.target.style.display = 'none'; }}
               />
             )}
           </div>
 
-          <div className="ml-2">
-            <div className="flex items-center gap-2">
-              <span className={`font-bold ${textColor} text-lg uppercase tracking-wide`}>
+          {/* Estado y modo de juego */}
+          <div className="ml-1 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
+              <span className={`font-bold ${textColor} text-sm sm:text-lg uppercase tracking-wide leading-tight`}>
                 {isWin ? 'Victoria' : 'Derrota'}
               </span>
-              <span className="text-[11px] font-medium bg-slate-800/80 text-slate-300 px-2 py-0.5 rounded border border-slate-700">
+              <span className="text-[10px] sm:text-[11px] font-medium bg-slate-800/80 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700 w-fit">
                 {match.gameMode || 'Partida'}
               </span>
             </div>
-            <div className="text-slate-400 text-xs mt-0.5">{match.duration}</div>
+            <div className="text-slate-400 text-[11px] sm:text-xs mt-0.5">{match.duration}</div>
           </div>
         </div>
         
-        <div className="text-center">
-          <div className="font-bold text-slate-200">{match.kills} / <span className="text-red-400">{match.deaths}</span> / {match.assists}</div>
-          <div className="text-xs text-slate-500">KDA</div>
+        {/* KDA */}
+        <div className="text-center shrink-0 px-1">
+          <div className="font-bold text-slate-200 text-xs sm:text-base">{match.kills} / <span className="text-red-400">{match.deaths}</span> / {match.assists}</div>
+          <div className="text-[10px] sm:text-xs text-slate-500">KDA</div>
         </div>
 
-        <div className="flex gap-1 hidden sm:flex">
+        {/* Items (Ocultos en móviles muy pequeños para no apretar la tarjeta, visibles en pantallas medianas en adelante) */}
+        <div className="hidden md:flex gap-1">
           {match.items.slice(0, 6).map((item, i) => (
-            <div key={i} className="w-8 h-8 bg-slate-900 rounded overflow-hidden border border-slate-700/50">
+            <div key={i} className="w-8 h-8 bg-slate-900 rounded overflow-hidden border border-slate-700/50 shrink-0">
               {item > 0 && <img src={`https://ddragon.leagueoflegends.com/cdn/${patchVersion}/img/item/${item}.png`} className="w-full h-full object-cover" alt="item" />}
             </div>
           ))}
@@ -130,17 +136,17 @@ export default function MatchCard({ match, patchVersion, currentRegion }) {
         const totalTeam200Kills = team200.reduce((acc, p) => acc + p.kills, 0) || 1;
 
         return (
-          <div className="border-t border-slate-700/50 bg-slate-900/60 p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="border-t border-slate-700/50 bg-slate-900/60 p-3 sm:p-4 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             
             {/* Equipo Azul */}
-            <div className="space-y-2">
+            <div className="space-y-1.5 sm:space-y-2">
               <div className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-1">Equipo Azul</div>
               {team100.map((p, i) => {
                 const kp = Math.round(((p.kills + p.assists) / totalTeam100Kills) * 100);
                 return (
-                  <div key={i} className="flex items-center justify-between text-xs p-1.5 bg-slate-800/30 hover:bg-slate-800/60 rounded transition-colors">
-                    <div className="flex items-center gap-2">
-                      <img src={`https://ddragon.leagueoflegends.com/cdn/${patchVersion}/img/champion/${p.championName}.png`} className="w-6 h-6 rounded border border-blue-900/50" alt={p.championName} onError={(e) => { e.target.style.display = 'none'; }} />
+                  <div key={i} className="flex items-center justify-between text-xs p-1.5 bg-slate-800/35 hover:bg-slate-800/60 rounded transition-colors gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <img src={`https://ddragon.leagueoflegends.com/cdn/${patchVersion}/img/champion/${p.championName}.png`} className="w-5 h-5 sm:w-6 sm:h-6 rounded border border-blue-900/50 shrink-0" alt={p.championName} onError={(e) => { e.target.style.display = 'none'; }} />
                       <Link 
                         to={`/profile/${currentRegion}/${encodeURIComponent(p.summonerName)}`} 
                         className="truncate w-24 sm:w-32 text-blue-400 hover:text-blue-300 hover:underline font-medium"
@@ -148,9 +154,9 @@ export default function MatchCard({ match, patchVersion, currentRegion }) {
                         {p.summonerName}
                       </Link>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                       <span className="text-slate-400 font-semibold">{p.kills}/{p.deaths}/{p.assists}</span>
-                      <span className="text-emerald-400 font-bold bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-800/40" title="Participación en Asesinatos">
+                      <span className="text-emerald-400 font-bold bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-800/40 text-[10px]" title="Participación en Asesinatos">
                         {isNaN(kp) ? 0 : kp}% KP
                       </span>
                     </div>
@@ -160,14 +166,14 @@ export default function MatchCard({ match, patchVersion, currentRegion }) {
             </div>
 
             {/* Equipo Rojo */}
-            <div className="space-y-2">
+            <div className="space-y-1.5 sm:space-y-2">
               <div className="text-xs font-bold text-red-400 uppercase tracking-wider mb-1">Equipo Rojo</div>
               {team200.map((p, i) => {
                 const kp = Math.round(((p.kills + p.assists) / totalTeam200Kills) * 100);
                 return (
-                  <div key={i} className="flex items-center justify-between text-xs p-1.5 bg-slate-800/30 hover:bg-slate-800/60 rounded transition-colors">
-                    <div className="flex items-center gap-2">
-                      <img src={`https://ddragon.leagueoflegends.com/cdn/${patchVersion}/img/champion/${p.championName}.png`} className="w-6 h-6 rounded border border-red-900/50" alt={p.championName} onError={(e) => { e.target.style.display = 'none'; }} />
+                  <div key={i} className="flex items-center justify-between text-xs p-1.5 bg-slate-800/35 hover:bg-slate-800/60 rounded transition-colors gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <img src={`https://ddragon.leagueoflegends.com/cdn/${patchVersion}/img/champion/${p.championName}.png`} className="w-5 h-5 sm:w-6 sm:h-6 rounded border border-red-900/50 shrink-0" alt={p.championName} onError={(e) => { e.target.style.display = 'none'; }} />
                       <Link 
                         to={`/profile/${currentRegion}/${encodeURIComponent(p.summonerName)}`} 
                         className="truncate w-24 sm:w-32 text-blue-400 hover:text-blue-300 hover:underline font-medium"
@@ -175,9 +181,9 @@ export default function MatchCard({ match, patchVersion, currentRegion }) {
                         {p.summonerName}
                       </Link>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                       <span className="text-slate-400 font-semibold">{p.kills}/{p.deaths}/{p.assists}</span>
-                      <span className="text-emerald-400 font-bold bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-800/40" title="Participación en Asesinatos">
+                      <span className="text-emerald-400 font-bold bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-800/40 text-[10px]" title="Participación en Asesinatos">
                         {isNaN(kp) ? 0 : kp}% KP
                       </span>
                     </div>
